@@ -1,0 +1,31 @@
+name: mysqlsh
+base: core18
+version: '8.0.17-ubuntu-core18' 
+summary: MySQL Shell
+description: |
+  MySQL Shell (part of MySQL Server) 8.0
+  MySQL query and administration shell client and framework.
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: devmode
+
+environment:
+  LD_LIBRARY_PATH: $SNAP/lib:$SNAP/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
+  PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:/snap/core18/current/bin:$PATH
+  LC_ALL: C
+
+apps:
+  mysqlsh:
+    command: mysqlsh
+    plugs:
+      - network
+
+parts:
+  mysqlsh:
+    source: http://repo.mysql.com/apt/ubuntu/pool/mysql-tools/m/mysql-shell/mysql-shell_8.0.17-1ubuntu16.04_amd64.deb
+    source-type: deb
+    plugin: dump
+    stage-packages:
+      - libpython2.7
+      - python-minimal
+    override-build: |
+      snapcraftctl build

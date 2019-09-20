@@ -1,6 +1,6 @@
 name: mysqlsh
 base: core18
-version: '8.0.17-ubuntu-core18' 
+version: '8.0.17'
 summary: MySQL Shell
 description: |
   MySQL Shell (part of MySQL Server) 8.0
@@ -21,7 +21,7 @@ apps:
 
 parts:
   mysqlsh:
-    source: http://repo.mysql.com/apt/ubuntu/pool/mysql-tools/m/mysql-shell/mysql-shell_8.0.17-1ubuntu16.04_amd64.deb
+    source: https://dev.mysql.com/get/Downloads/MySQL-Shell/mysql-shell_8.0.17-1ubuntu18.04_amd64.deb
     source-type: deb
     plugin: dump
     stage-packages:

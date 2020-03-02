@@ -1,0 +1,55 @@
+name: mysql-shell
+base: core18
+version: '8.0.17-source' 
+summary: MySQL Shell
+description: |
+  MySQL Shell (part of MySQL Server) 8.0
+  MySQL query and administration shell client and framework.
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: classic
+architectures:
+  - build-on: amd64
+#  - build-on: i386
+#  - build-on: arm64
+#  - build-on: ppc64el
+environment:
+  LD_LIBRARY_PATH: $SNAP/lib:$SNAP/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
+  PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:/snap/core18/current/bin:$PATH
+  LC_ALL: C
+
+apps:
+  mysqlsh:
+    command: mysqlsh
+    plugs:
+      - network
+
+parts:
+  mysqlsh:
+    plugin: dump
+    source: https://github.com/mysql/mysql-shell
+    source-type: git
+    source-branch: "8.0"
+    stage-packages:
+      - libpython2.7
+      - libssl1.1
+    override-build: |
+      #-DMYSQL_BUILD_DIR=../mysql-server/bld\
+      cmake src -DMYSQL_SOURCE_DIR=../mysql-server -DHAVE_PYTHON=1 -Wno-dev
+      make -j4
+      snapcraftctl build
+    build-packages:
+      - python-minimal
+      - cmake
+      - gcc
+      - g++
+      - zip
+      - libmysqlclient-dev
+      #- libmysqlclient
+  mysql-server:
+    plugin: dump
+    source: https://github.com/mysql/mysql-server
+    source-type: git
+    source-branch: "8.0"
+    override-build: |
+      true
+      snapcraftctl build

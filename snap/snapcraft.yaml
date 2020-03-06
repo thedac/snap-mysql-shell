@@ -1,0 +1,71 @@
+name: mysql-shell-source
+base: core18
+version: '8.0.19'
+summary: MySQL Shell
+description: |
+  MySQL Shell (part of MySQL Server) 8.0
+  MySQL query and administration shell client and framework.
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: classic
+architectures:
+  - build-on: amd64
+#  - build-on: i386
+#  - build-on: arm64
+#  - build-on: ppc64el
+environment:
+  LD_LIBRARY_PATH: $SNAP/lib:$SNAP/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
+  PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:/snap/core18/current/bin:$PATH
+  LC_ALL: C
+
+apps:
+  mysqlsh:
+    command: mysqlsh
+    plugs:
+      - network
+
+parts:
+  mysqlsh:
+    plugin: dump
+    #source: https://github.com/mysql/mysql-shell
+    source: file:///root/project/source/mysql-shell
+    source-type: git
+    source-branch: "8.0"
+    #stage-packages:
+    #  - libpython2.7
+    #  - libssl1.1
+    #  - libssl1.0.0
+    override-build: |
+      # -DHAVE_PYTHON=1 -Wno-dev -DWITH_PROTOBUF=<path_to_protobuf> -DHAVE_V8=1 -DPROTOBUF_INCLUDE_DIR==../../mysql-server/build/library_output_directory/
+      # ../../mysql-server/build/library_output_directory/
+      cmake . -DMYSQL_SOURCE_DIR=../../mysql-server/src -DMYSQL_BUILD_DIR=../../mysql-server/build -DHAVE_PYTHON=1  -DWITH_PROTOBUF=system
+      make -j4
+    build-packages:
+      - cmake
+      - gcc
+      - g++
+      - zip
+      - libncurses5-dev
+      - bison
+      - pkg-config
+      - libcurl4
+      - libcurl4-gnutls-dev
+      - libpython3-dev
+      - libprotobuf-dev
+      - libssl-dev
+      #- libboost-dev
+      #- libpython2.7
+      #- libmysqlclient-dev
+      #- python-minimal
+  mysql-server:
+    plugin: dump
+    #source: https://github.com/mysql/mysql-server
+    source: file:///root/project/source/mysql-server
+    source-branch: "8.0"
+    #source: https://salsa.debian.org/mariadb-team/mysql/
+    #source-branch: "mysql-8.0/ubuntu/devel"
+    source-type: git
+    override-build: |
+      cmake . -DWITH_SSL=system -DWITH_BOOST=boost -DDOWNLOAD_BOOST=1 -DFORCE_INSOURCE_BUILD=1 -DWITH_PROTOBUF=system
+      cmake --build . --target mysqlclient
+      cmake --build . --target mysqlxclient
+      #cmake --build . --target libprotobuf

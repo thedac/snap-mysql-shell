@@ -6,7 +6,7 @@ description: |
   MySQL Shell (part of MySQL Server) 8.0
   MySQL query and administration shell client and framework.
 grade: devel # must be 'stable' to release into candidate/stable channels
-confinement: classic
+confinement: devmode
 architectures:
   - build-on: amd64
 #  - build-on: i386
@@ -19,7 +19,7 @@ environment:
 
 apps:
   mysqlsh:
-    command: mysqlsh
+    command: bin/mysqlsh
     plugs:
       - network
 
@@ -30,8 +30,9 @@ parts:
     source-type: git
     source-branch: "8.0"
     override-build: |
-      cmake . -DMYSQL_BUILD_DIR=../../mysql-server/build -DMYSQL_SOURCE_DIR=../../mysql-server/src -DHAVE_PYTHON=1 -DPROTOBUF_INCLUDE_DIR==../../mysql-server/build/extra/protobuf/
+      cmake . -DMYSQL_BUILD_DIR=/root/parts/mysql-server/build -DMYSQL_SOURCE_DIR=/root/parts/mysql-server/src -DHAVE_PYTHON=1
       make -j4
+      snapcraftctl build
     build-packages:
       - cmake
       - gcc
@@ -45,13 +46,29 @@ parts:
       - libpython3-dev
       - libprotobuf-dev
       - libssl-dev
+    stage-packages:
+      - libasn1-8-heimdal
+      - libcurl3-gnutls
+      - libgssapi3-heimdal
+      - libhcrypto4-heimdal
+      - libheimbase1-heimdal
+      - libheimntlm0-heimdal
+      - libhx509-5-heimdal
+      - libkrb5-26-heimdal
+      - libldap-2.4-2
+      - libnghttp2-14
+      - libpsl5
+      - libpython3.6
+      - libroken18-heimdal
+      - librtmp1
+      - libsasl2-2
+      - libwind0-heimdal
   mysql-server:
     plugin: dump
     source: https://github.com/mysql/mysql-server
     source-branch: "8.0"
     source-type: git
     override-build: |
-      cmake . -DWITH_SSL=system -DWITH_BOOST=boost -DDOWNLOAD_BOOST=1 -DFORCE_INSOURCE_BUILD=1
+      cmake . -DWITH_SSL=system -DWITH_BOOST=boost -DDOWNLOAD_BOOST=1 -DFORCE_INSOURCE_BUILD=1 -Dprotobuf_BUILD_SHARED_LIBS=OFF
       cmake --build . --target mysqlclient
       cmake --build . --target mysqlxclient
-      cmake --build . --target libprotobuf

@@ -9,12 +9,12 @@ grade: devel # must be 'stable' to release into candidate/stable channels
 confinement: devmode
 architectures:
   - build-on: amd64
-#  - build-on: i386
-#  - build-on: arm64
-#  - build-on: ppc64el
+  - build-on: i386
+  - build-on: arm64
+  - build-on: ppc64el
 environment:
-  LD_LIBRARY_PATH: $SNAP/lib:$SNAP/lib/$SNAPCRAFT_ARCH_TRIPLET:$SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
-  PATH: $SNAP/usr/sbin:$SNAP/usr/bin:$SNAP/sbin:$SNAP/bin:/snap/core18/current/bin:$PATH
+  LD_LIBRARY_PATH: $SNAP/lib:$SNAP/usr/lib
+  PATH: $SNAP/bin:$PATH
   LC_ALL: C
 
 apps:
@@ -24,14 +24,18 @@ apps:
       - network
 
 parts:
-  mysqlsh:
+  mysql-shell:
     plugin: dump
     source: https://github.com/mysql/mysql-shell
     source-type: git
     source-branch: "8.0"
     override-build: |
-      cmake . -DMYSQL_BUILD_DIR=/root/parts/mysql-server/build -DMYSQL_SOURCE_DIR=/root/parts/mysql-server/src -DHAVE_PYTHON=1
+      # Clean out build directory until we can stop the copy in the first place
+      rm -rf /root/parts/mysql-shell/build/*
+      cmake ../src -DMYSQL_BUILD_DIR=/root/parts/mysql-server/build/bld -DMYSQL_SOURCE_DIR=/root/parts/mysql-server/src -DHAVE_PYTHON=1
       make -j4
+      # Clean up cruft that does not need to go in the snap
+      sh /root/project/scripts/cleanup-stage.sh
       snapcraftctl build
     build-packages:
       - cmake
@@ -44,7 +48,6 @@ parts:
       - libcurl4
       - libcurl4-gnutls-dev
       - libpython3-dev
-      - libprotobuf-dev
       - libssl-dev
     stage-packages:
       - libasn1-8-heimdal
@@ -69,6 +72,8 @@ parts:
     source-branch: "8.0"
     source-type: git
     override-build: |
-      cmake . -DWITH_SSL=system -DWITH_BOOST=boost -DDOWNLOAD_BOOST=1 -DFORCE_INSOURCE_BUILD=1 -Dprotobuf_BUILD_SHARED_LIBS=OFF
+      mkdir bld
+      cd bld
+      cmake .. -DWITH_SSL=system -DWITH_BOOST=boost -DDOWNLOAD_BOOST=1 -Dprotobuf_BUILD_SHARED_LIBS=OFF
       cmake --build . --target mysqlclient
       cmake --build . --target mysqlxclient
